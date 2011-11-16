@@ -23,7 +23,34 @@ class TableMaths
     t.setAttribute 'src', src
     document.body.appendChild t
   
+  prerun: () ->
+    if $? || $.fn.draggable?
+      if ((new Date).getTime() - @loading_start) > @loading_max * 1000
+        alert "Waited for #{@loading_max} seconds and jQuery/jQuery UI are not loaded yet. Giving up... sorry! Waaaa!"
+      else
+        console.log "jquery or jquery ui not loaded; waiting another #{@loading_interval}ms..."
+        setTimeout @prerun, @loading_interval
+    else
+      @run()
+  
+  tagHtml: (e) ->
+    @tag_index++
+    @cache[@tag_index] = e
+    out = $("<p>").append(e.eq(0).clone()).html()
+    parts = out.split '>', 2
+    out = parts[0] + '>'
+    out = out.replace('<','&lt;').replace('>','&gt;')
+    out = '<span class="tmhl-tag" style="cursor:help;" cacheidx="' + @tag_index + '">' + out + '</span>'
+
+  highlightEl: (e) ->
+    p = e.offset()
+    $('#tmhl').css('left',p.left).css('top',p.top).width(e.width()).height(e.height()).show()
+
+  run: () ->
+    # body...
+  
   report: () ->
+    @init()
     
 TableMaths.version = '1.0'
 
@@ -33,18 +60,6 @@ $tm.report()
 
 
 ###
-  prerun : function(){
-    if (typeof $ == 'undefined' || typeof $.fn.draggable == 'undefined'){
-      if ((new Date().getTime() - this.loading_start) > (this.loading_max * 1000)) {
-        alert("Waited for "+this.loading_max+" seconds and jQuery/jQuery UI are not loaded yet. Giving up... sorry! Waaaa!");
-      } else {
-        console.log('jquery or jquery ui not loaded; waiting another '+this.loading_interval+'ms...');
-        window.setTimeout("$tablemaths.prerun()", this.loading_interval);
-      }
-    }else{
-      this.run();
-    }
-  },
   run : function(){
     if ($.browser.opera || $.browser.msie){
       alert("Sorry, TableMaths doesn't work with your browser. Please try Firefox, Safari, or Chrome.");
@@ -108,20 +123,4 @@ $tm.report()
       }
     });
   },
-  tagHtml : function(e){
-    this.tag_index++;
-    this.cache[this.tag_index]=e;
-    out = $("<p>").append(e.eq(0).clone()).html();
-    parts = out.split('>',2);
-    out = parts[0]+'>';
-    out = out.replace('<','&lt;').replace('>','&gt;');
-    out = '<span class="tmhl-tag" style="cursor:help;" cacheidx="'+this.tag_index+'">'+out+'</span>';
-    return out;
-  },
-  highlightEl : function(e){
-    p=e.offset();
-    $('#tmhl').css('left',p.left).css('top',p.top).width(e.width()).height(e.height()).show();
-  }
-};
-$tablemaths.init();
 ###

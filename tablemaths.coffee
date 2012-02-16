@@ -16,7 +16,7 @@ class TableMaths
     @loading_start = (new Date).getTime()
     @addScript('http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js')
     @addScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js')
-    setTimeout @prerun, @loading_interval
+    setTimeout ( => @prerun()), @loading_interval
   
   addScript: (src) ->
     t = document.createElement 'script'
@@ -24,12 +24,12 @@ class TableMaths
     document.body.appendChild t
   
   prerun: () ->
-    if $? || $.fn.draggable?
+    unless $? && $.fn.draggable?
       if ((new Date).getTime() - @loading_start) > @loading_max * 1000
         alert "Waited for #{@loading_max} seconds and jQuery/jQuery UI are not loaded yet. Giving up... sorry! Waaaa!"
       else
         console.log "jquery or jquery ui not loaded; waiting another #{@loading_interval}ms..."
-        setTimeout @prerun, @loading_interval
+        setTimeout ( => @prerun()), @loading_interval
     else
       @run()
   
@@ -47,11 +47,30 @@ class TableMaths
     $('#tmhl').css('left',p.left).css('top',p.top).width(e.width()).height(e.height()).show()
 
   run: () ->
-    # body...
-  
+    return unless @browserValid?
+    UI.setup()
+    alert "derp... not done yet"
+
   report: () ->
     @init()
     
+  browserValid: () ->
+    if $.browser.opera || $.browser.msie
+      alert("Sorry, TableMaths doesn't work with your browser. Please try Firefox, Safari, or Chrome.")
+      return
+  
+  class UI
+    @setup: () ->
+      unless $('#tablemaths').length > 0
+        $('body').append('<div id="tmhl" style="display:none;background-color:#9cf;opacity:0.75;position:absolute;z-index:999;"></div>')
+        $('body').append('<div id="tablemaths" style="z-index:9999;position:fixed;top:15px;left:15px;border:1px solid #000;background-color:#ff9;font-family:Lucida Grande,Helvetica,Arial;font-size:10px;padding:5px;width:450px;overflow:hidden;cursor:move;"><h1 style="font-size:16px;font-weight:bold;margin:0 0 12px 0;">TableMaths '+TableMaths.version+'</h1><div class="report"></div><div id="tmrs" class="ui-resizable-handle ui-resizable-se" style="position:absolute;bottom:5px;right:5px;background-image:url(http://traction.github.com/TableMaths/handle.png);width:11px;height:11px;cursor:se-resize;"></div></div>')
+        $('#tablemaths').draggable().resizable({ handles: {se:'#tmrs'} })
+        $('.tmhl-tag').live 'mouseover mouseout', (event) ->
+          if event.type == 'mouseout'
+            $('#tmhl').hide()
+          else
+            $tm.highlightEl($tm.cache[$(this).attr('cacheidx')])
+        
 TableMaths.version = '1.0'
 
 $tm = new TableMaths
@@ -61,18 +80,14 @@ $tm.report()
 
 ###
   run : function(){
-    if ($.browser.opera || $.browser.msie){
-      alert("Sorry, TableMaths doesn't work with your browser. Please try Firefox, Safari, or Chrome.");
-      return;
-    }
-    $('body').append('<div id="tmhl" style="display:none;background-color:#9cf;opacity:0.75;position:absolute;z-index:999;"></div>');
+    
+    
     this.cache = [];
     i=0;
     err=0;
     warn=0;
     report=''
-    reporttag='<div id="tablemaths" style="z-index:9999;position:fixed;top:15px;left:15px;border:1px solid #000;background-color:#ff9;font-family:Lucida Grande,Helvetica,Arial;font-size:10px;padding:5px;width:450px;overflow:hidden;cursor:move;">';
-    reporttag += '<h1 style="font-size:16px;font-weight:bold;margin:0 0 12px 0;">TableMaths '+this.version+'</h1>';
+    
     $('table,td').each(function(idx,el){
       var e=$(el);
       var x=e.attr('width');
@@ -113,14 +128,6 @@ $tm.report()
       i++;
     });
     report = '<b>'+i+' tags scanned, '+err+' errors, '+warn+' warnings.</b><br/><br/>'+report+'Enjoy your maths!';
-    $('body').append(reporttag+report+'<div id="tmrs" class="ui-resizable-handle ui-resizable-se" style="position:absolute;bottom:5px;right:5px;background-image:url(http://traction.github.com/TableMaths/handle.png);width:11px;height:11px;cursor:se-resize;"></div></div');
-    $('#tablemaths').draggable().resizable({ handles: {se:'#tmrs'} });
-    $('.tmhl-tag').live('mouseover mouseout', function(event) {
-      if (event.type=='mouseout'){
-        $('#tmhl').hide();
-      } else {
-        $tablemaths.highlightEl($tablemaths.cache[$(this).attr('cacheidx')]);
-      }
-    });
+    
   },
 ###

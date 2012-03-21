@@ -4,7 +4,7 @@ Table Maths!
 By Gabriel Gilder, 2011/11/10
 ###
 
-class TableMaths
+class window.TableMaths
   constructor: () ->
     @loading_start = 0
     @loading_interval = 100
@@ -73,8 +73,9 @@ class TableMaths
         
 TableMaths.version = '1.0'
 
-$tm = new TableMaths
-$tm.report()
+if document?
+  $tm = new TableMaths
+  $tm.report()
 
 
 

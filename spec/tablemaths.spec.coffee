@@ -14,15 +14,22 @@ mockAttr = (el)->
   obj
 
 describe "TableMaths", ->
-  it "should be awesome", ->
-    expect(TableMaths.version).toEqual "1.0"
+# pending
 
-describe "Test element validation", ->
-  it "should be fun", ->
-    el = mockEl({'fun':'whee'}, {'style':{'width':100}})
-    expect(el.fun()).toEqual('whee')
-    expect(el.get(0).style.width).toEqual(100)
+describe "td validations", ->
+  describe "empty width attribute validation", ->
+    it "should warn on empty width attr", ->
+      
+    it "should pass with width attr", ->
 
+    it "should ignore non-td elements", ->
+
+
+#  it "should warn on empty width attribute", ->
+#    el = mockEl({'fun':'whee'}, {'style':{'width':100}})
+#    expect(el.fun()).toEqual('whee')
+#    expect(el.get(0).style.width).toEqual(100)
+#
 # Pending validations
 # table/td: warning: empty width attr
 # table/td: error: percentage width attr/css with padding

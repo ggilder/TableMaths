@@ -5,14 +5,14 @@ By Gabriel Gilder, 2011/11/10
 ###
 
 class window.TableMaths
-  constructor: () ->
+  constructor: ->
     @loading_start = 0
     @loading_interval = 100
     @loading_max = 10
     @cache = []
     @tag_index = 0
   
-  init: () ->
+  init: ->
     @loading_start = (new Date).getTime()
     @addScript('http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js')
     @addScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js')
@@ -23,7 +23,7 @@ class window.TableMaths
     t.setAttribute 'src', src
     document.body.appendChild t
   
-  prerun: () ->
+  prerun: ->
     unless $? && $.fn.draggable?
       if ((new Date).getTime() - @loading_start) > @loading_max * 1000
         alert "Waited for #{@loading_max} seconds and jQuery/jQuery UI are not loaded yet. Giving up... sorry! Waaaa!"
@@ -46,21 +46,24 @@ class window.TableMaths
     p = e.offset()
     $('#tmhl').css('left',p.left).css('top',p.top).width(e.width()).height(e.height()).show()
 
-  run: () ->
+  run: ->
     return unless @browserValid?
     UI.setup()
     alert "derp... not done yet"
 
-  report: () ->
+  report: ->
     @init()
     
-  browserValid: () ->
+  browserValid: ->
     if $.browser.opera || $.browser.msie
       alert("Sorry, TableMaths doesn't work with your browser. Please try Firefox, Safari, or Chrome.")
-      return
   
+  class Validation
+    constructor: (@tags, @validator) ->
+    test: (el) ->
+
   class UI
-    @setup: () ->
+    @setup: ->
       unless $('#tablemaths').length > 0
         $('body').append('<div id="tmhl" style="display:none;background-color:#9cf;opacity:0.75;position:absolute;z-index:999;"></div>')
         $('body').append('<div id="tablemaths" style="z-index:9999;position:fixed;top:15px;left:15px;border:1px solid #000;background-color:#ff9;font-family:Lucida Grande,Helvetica,Arial;font-size:10px;padding:5px;width:450px;overflow:hidden;cursor:move;"><h1 style="font-size:16px;font-weight:bold;margin:0 0 12px 0;">TableMaths '+TableMaths.version+'</h1><div class="report"></div><div id="tmrs" class="ui-resizable-handle ui-resizable-se" style="position:absolute;bottom:5px;right:5px;background-image:url(http://traction.github.com/TableMaths/handle.png);width:11px;height:11px;cursor:se-resize;"></div></div>')

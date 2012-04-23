@@ -14,7 +14,7 @@ mockAttr = (el, tagName)->
   (obj[key] = el[key]) for own key, value of el
   obj
 
-describe "TableMaths", ->
+# describe "TableMaths", ->
 # pending
 
 describe "width validations", ->
@@ -62,7 +62,6 @@ describe "width validations", ->
 
 # Pending validations
 # table/td: error: percentage width attr/css with padding
-# table/td: warning: percentage width (except root table)
 # table/td: error: width attr/css not matching actual width
 # tr: error: valign attribute (maybe css too?)
 # td: error: mismatched vertical padding across row

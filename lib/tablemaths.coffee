@@ -4,14 +4,19 @@ Table Maths!
 By Gabriel Gilder, 2011/11/10
 ###
 
-class window.TableMaths
+$tm = class window.TableMaths
+  @cache = []
+
+  @highlightEl: (e) ->
+    p = e.offset()
+    $('#tmhl').css('left',p.left).css('top',p.top).width(e.width()).height(e.height()).show()
+    
   constructor: ->
     @loading_start = 0
     @loading_interval = 100
     @loading_max = 10
-    @cache = []
     @tag_index = 0
-  
+
   init: ->
     @loading_start = (new Date).getTime()
     @addScript('http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js')
@@ -35,20 +40,16 @@ class window.TableMaths
   
   tagHtml: (e) ->
     @tag_index++
-    @cache[@tag_index] = e
+    $tm.cache[@tag_index] = e
     out = $("<p>").append(e.eq(0).clone()).html()
     parts = out.split '>', 2
     out = parts[0] + '>'
     out = out.replace('<','&lt;').replace('>','&gt;')
     out = '<span class="tmhl-tag" style="cursor:help;" cacheidx="' + @tag_index + '">' + out + '</span>'
 
-  highlightEl: (e) ->
-    p = e.offset()
-    $('#tmhl').css('left',p.left).css('top',p.top).width(e.width()).height(e.height()).show()
-
   run: ->
     return unless @browserValid?
-    UI.setup()
+    new $tm.UI()
     alert "derp... not done yet"
 
   report: ->
@@ -57,50 +58,75 @@ class window.TableMaths
   browserValid: ->
     if $.browser.opera || $.browser.msie
       alert("Sorry, TableMaths doesn't work with your browser. Please try Firefox, Safari, or Chrome.")
-  
-  class Validation
-    constructor: (@tags, @validator) ->
-    test: (el) ->
-
-  class UI
-    @setup: ->
-      unless $('#tablemaths').length > 0
-        $('body').append('<div id="tmhl" style="display:none;background-color:#9cf;opacity:0.75;position:absolute;z-index:999;"></div>')
-        $('body').append('<div id="tablemaths" style="z-index:9999;position:fixed;top:15px;left:15px;border:1px solid #000;background-color:#ff9;font-family:Lucida Grande,Helvetica,Arial;font-size:10px;padding:5px;width:450px;overflow:hidden;cursor:move;"><h1 style="font-size:16px;font-weight:bold;margin:0 0 12px 0;">TableMaths '+TableMaths.version+'</h1><div class="report"></div><div id="tmrs" class="ui-resizable-handle ui-resizable-se" style="position:absolute;bottom:5px;right:5px;background-image:url(http://traction.github.com/TableMaths/handle.png);width:11px;height:11px;cursor:se-resize;"></div></div>')
-        $('#tablemaths').draggable().resizable({ handles: {se:'#tmrs'} })
-        $('.tmhl-tag').live 'mouseover mouseout', (event) ->
-          if event.type == 'mouseout'
-            $('#tmhl').hide()
-          else
-            $tm.highlightEl($tm.cache[$(this).attr('cacheidx')])
         
-TableMaths.version = '1.0'
+class $tm.Element
+  constructor: (@el) ->
+    @domEl = @el.get(0)
+    @tagName = @domEl.tagName
+  widthAttr: ->
+    @domEl.width?.trim()
+  widthCss: (el)->
+    @domEl.style?.width or ''
+  parents: ->
+    @el.parents.apply(@el, arguments)
 
-if document?
-  $tm = new TableMaths
-  $tm.report()
+class $tm.Validation
+  constructor: (@tags, @validator) ->
+  validTag: (tag) -> @tags.indexOf(tag.toLowerCase()) != -1
+  test: (el) ->
+    el = new $tm.Element(el)
+    return new $tm.ValidationResult.Pass() unless @validTag(el.tagName)
+    @validator(el)
 
+class $tm.ValidationResult
+  constructor: (@passed, @level, @message) ->
+    @passed = !!@passed
 
+class $tm.ValidationResult.Pass extends $tm.ValidationResult
+  constructor: ->
+    super(true)
 
+class $tm.ValidationResult.Warning extends $tm.ValidationResult
+  constructor: (message) ->
+    super(false, 'Warning', message)
+    
+class $tm.UI
+  constructor: ->
+    unless $('#tablemaths').length > 0
+      $('body').append('<div id="tmhl" style="display:none;background-color:#9cf;opacity:0.75;position:absolute;z-index:999;"></div>')
+      $('body').append('<div id="tablemaths" style="z-index:9999;position:fixed;top:15px;left:15px;border:1px solid #000;background-color:#ff9;font-family:Lucida Grande,Helvetica,Arial;font-size:10px;padding:5px;width:450px;overflow:hidden;cursor:move;"><h1 style="font-size:16px;font-weight:bold;margin:0 0 12px 0;">TableMaths '+$tm.version+'</h1><div class="report"></div><div id="tmrs" class="ui-resizable-handle ui-resizable-se" style="position:absolute;bottom:5px;right:5px;background-image:url(http://traction.github.com/TableMaths/handle.png);width:11px;height:11px;cursor:se-resize;"></div></div>')
+      $('#tablemaths').draggable().resizable({ handles: {se:'#tmrs'} })
+      $('.tmhl-tag').live 'mouseover mouseout', (event) ->
+        if event.type == 'mouseout'
+          $('#tmhl').hide()
+        else
+          $tm.highlightEl($tm.cache[$(this).attr('cacheidx')])
+             
+$tm.version = '1.0'
+$tm.validations = {}
+(->
+  v = $tm.validations
+  pass = $tm.ValidationResult.Pass
+  warn = $tm.ValidationResult.Warning
+  v.emptyWidthValidation = new $tm.Validation ['td','table'], (el) ->
+    if el.widthAttr() is ''
+      new warn 'Empty width attribute'
+    else
+      new pass
+  v.percentageWidthValidation = new $tm.Validation ['td','table'], (el) ->
+    attr = el.widthAttr()
+    css = el.widthCss()
+    if el.parents('table').length == 0
+      new pass
+    else if attr? and attr.slice(-1) is '%'
+      new warn 'Percentage width attribute'
+    else if css.slice(-1) is '%'
+      new warn 'Percentage width in inline style'
+    else
+      new pass
+)()
+(new $tm()).report() if document?
 ###
-  run : function(){
-    
-    
-    this.cache = [];
-    i=0;
-    err=0;
-    warn=0;
-    report=''
-    
-    $('table,td').each(function(idx,el){
-      var e=$(el);
-      var x=e.attr('width');
-      if(x !== undefined){
-        var w=e.width();
-        if (x.trim() === '') {
-          report += 'Warning! Empty width attribute on tag:<br/>';
-          report += $tablemaths.tagHtml(e)+'<br/><br/>';
-          warn++;
         } else if (x.substring(x.length-1)=='%'){
           if (parseInt(e.css('padding-left')) || parseInt(e.css('padding-right'))) {
             report += 'Error! Tag with percentage width and padding:<br/>';
